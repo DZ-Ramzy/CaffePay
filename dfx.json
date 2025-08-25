@@ -1,31 +1,21 @@
 {
+  "version": 1,
   "canisters": {
-    "llm": {
-      "type": "pull",
-      "id": "w36hm-eqaaa-aaaal-qr76a-cai"
+    "caffpay_backend": {
+      "type": "rust",
+      "package": "caffpay_backend",
+      "candid": "src/backend/caffpay_backend.did",
+      "wasm": "src/backend/target/wasm32-unknown-unknown/release/caffpay_backend.wasm",
+      "root": "src/backend"
     },
-    "backend": {
-      "dependencies": ["llm"],
-      "candid": "src/backend/backend.did",
-      "package": "backend",
-      "type": "custom",
-      "shrink": true,
-      "gzip": true,
-      "wasm": "target/wasm32-unknown-unknown/release/backend.wasm",
-      "build": ["bash ./scripts/generate-candid.sh backend"],
-      "metadata": [
-        {
-          "name": "candid:service"
-        }
-      ]
-    },
-    "frontend": {
-      "dependencies": ["backend"],
+    "caffpay_frontend": {
       "type": "assets",
-      "source": ["src/frontend/dist/"]
+      "source": ["frontend/out"]
     }
   },
-  "output_env_file": ".env",
-  "version": 1,
-  "dfx": "0.25.0"
+  "networks": {
+    "local": { "bind": "127.0.0.1:4943", "type": "ephemeral" },
+    "ic":    { "providers": ["https://ic0.app"], "type": "persistent" }
+  },
+  "output_env_file": ".env.dfx"
 }

@@ -1,54 +1,176 @@
-use ic_cdk::export_candid;
+use candid::{CandidType, Decode, Encode};
+use ic_cdk::api::time;
+use ic_cdk_macros::{init, post_upgrade, pre_upgrade, query, update};
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 
-use ic_llm::{ChatMessage, Model};
-
-#[ic_cdk::update]
-async fn prompt(prompt_str: String) -> String {
-    ic_llm::prompt(Model::Llama3_1_8B, prompt_str).await
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub enum Provider { 
+    Stripe, 
+    PayPal, 
+    CkBTC, 
+    Custom(String) 
 }
 
-#[ic_cdk::update]
-async fn chat(messages: Vec<ChatMessage>) -> String {
-    let response = ic_llm::chat(Model::Llama3_1_8B)
-        .with_messages(messages)
-        .send()
-        .await;
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub enum IntentStatus { 
+    Processing, 
+    Succeeded, 
+    Refunded, 
+    Failed 
+}
 
-    // A response can contain tool calls, but we're not calling tools in this project,
-    // so we can return the response message directly.
-    response.message.content.unwrap_or_default()
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub struct Intent {
+    pub id: String,
+    pub amount_minor: u64,
+    pub currency: String,
+    pub description: Option<String>,
+    pub provider: Provider,
+    pub created_at: u64,
+    pub status: IntentStatus,
+    pub receipt_hash: Option<String>, // optional "on-chain receipt" marker
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub struct Invoice {
+    pub id: String,
+    pub amount_minor: u64,
+    pub currency: String,
+    pub issued_at: u64,
+    pub email_enc: Option<String>,
+    pub description: Option<String>,
+    pub paid: bool,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub struct ProviderConfig {
+    pub provider: Provider,
+    pub kv: Vec<(String, String)>, // demo only (plain text) — NOTE security in README
+}
+
+#[derive(CandidType, Deserialize, Serialize, Default)]
+struct StableState {
+    intents: Vec<Intent>,
+    invoices: Vec<Invoice>,
+    configs: Vec<ProviderConfig>,
 }
 
 thread_local! {
-    static COUNTER: RefCell<u64> = const { RefCell::new(0) };
+    static STATE: RefCell<StableState> = RefCell::new(StableState::default());
 }
 
-#[ic_cdk::query]
-fn greet(name: String) -> String {
-    format!("Hello, {}!", name)
+fn gen_id(prefix: &str) -> String {
+    format!("{}-{}", prefix, time())
 }
 
-#[ic_cdk::update]
-fn increment() -> u64 {
-    COUNTER.with(|counter| {
-        let val = *counter.borrow() + 1;
-        *counter.borrow_mut() = val;
-        val
+#[init]
+fn init() {}
+
+#[pre_upgrade]
+fn pre_upgrade() {
+    let bytes = STATE.with(|s| Encode!(&*s.borrow()).unwrap());
+    ic_cdk::storage::stable_save((bytes,)).unwrap();
+}
+
+#[post_upgrade]
+fn post_upgrade() {
+    if let Ok((bytes,)) = ic_cdk::storage::stable_restore::<(Vec<u8>,)>() {
+        if let Ok(state) = Decode!(&bytes, StableState) {
+            STATE.with(|s| *s.borrow_mut() = state);
+        }
+    }
+}
+
+#[update]
+fn create_intent(amount_minor: u64, currency: String, description: Option<String>, provider: Provider) -> Intent {
+    let intent = Intent {
+        id: gen_id("int"),
+        amount_minor,
+        currency,
+        description,
+        provider,
+        created_at: time(),
+        status: IntentStatus::Processing,
+        receipt_hash: None,
+    };
+    STATE.with(|s| s.borrow_mut().intents.push(intent.clone()));
+    intent
+}
+
+#[query]
+fn get_intent(id: String) -> Option<Intent> {
+    STATE.with(|s| s.borrow().intents.iter().cloned().find(|i| i.id == id))
+}
+
+#[query]
+fn list_intents() -> Vec<Intent> {
+    STATE.with(|s| s.borrow().intents.clone())
+}
+
+#[update]
+fn mark_paid(id: String, receipt_hash: Option<String>) -> Option<Intent> {
+    STATE.with(|s| {
+        let st = &mut *s.borrow_mut();
+        if let Some(i) = st.intents.iter_mut().find(|i| i.id == id) {
+            i.status = IntentStatus::Succeeded;
+            i.receipt_hash = receipt_hash;
+            return Some(i.clone());
+        }
+        None
     })
 }
 
-#[ic_cdk::query]
-fn get_count() -> u64 {
-    COUNTER.with(|counter| *counter.borrow())
-}
-
-#[ic_cdk::update]
-fn set_count(value: u64) -> u64 {
-    COUNTER.with(|counter| {
-        *counter.borrow_mut() = value;
-        value
+#[update]
+fn refund_intent(id: String) -> Option<Intent> {
+    STATE.with(|s| {
+        let st = &mut *s.borrow_mut();
+        if let Some(i) = st.intents.iter_mut().find(|i| i.id == id) {
+            i.status = IntentStatus::Refunded;
+            return Some(i.clone());
+        }
+        None
     })
 }
 
-export_candid!();
+#[update]
+fn create_invoice(amount_minor: u64, currency: String, email_enc: Option<String>, description: Option<String>) -> Invoice {
+    let inv = Invoice {
+        id: gen_id("inv"),
+        amount_minor, 
+        currency,
+        issued_at: time(),
+        email_enc, 
+        description,
+        paid: false,
+    };
+    STATE.with(|s| s.borrow_mut().invoices.push(inv.clone()));
+    inv
+}
+
+#[query]
+fn list_invoices() -> Vec<Invoice> {
+    STATE.with(|s| s.borrow().invoices.clone())
+}
+
+#[update]
+fn set_provider_config(cfg: ProviderConfig) {
+    STATE.with(|s| {
+        let st = &mut *s.borrow_mut();
+        if let Some(pos) = st.configs.iter().position(|c| std::mem::discriminant(&c.provider) == std::mem::discriminant(&cfg.provider)) {
+            st.configs[pos] = cfg;
+        } else {
+            st.configs.push(cfg);
+        }
+    });
+}
+
+#[query]
+fn get_provider_configs() -> Vec<ProviderConfig> {
+    STATE.with(|s| s.borrow().configs.clone())
+}
+
+#[query]
+fn health() -> (bool, u64) {
+    (true, time())
+}

@@ -1,0 +1,52 @@
+type Provider = variant {
+  Stripe;
+  PayPal;
+  CkBTC;
+  Custom : text;
+};
+
+type IntentStatus = variant {
+  Processing;
+  Succeeded;
+  Refunded;
+  Failed;
+};
+
+type Intent = record {
+  id : text;
+  amount_minor : nat64;
+  currency : text;
+  description : opt text;
+  provider : Provider;
+  created_at : nat64;
+  status : IntentStatus;
+  receipt_hash : opt text;
+};
+
+type Invoice = record {
+  id : text;
+  amount_minor : nat64;
+  currency : text;
+  issued_at : nat64;
+  email_enc : opt text;
+  description : opt text;
+  paid : bool;
+};
+
+type ProviderConfig = record {
+  provider : Provider;
+  kv : vec record { text; text };
+};
+
+service : {
+  create_intent : (nat64, text, opt text, Provider) -> (Intent);
+  get_intent : (text) -> (opt Intent) query;
+  list_intents : () -> (vec Intent) query;
+  mark_paid : (text, opt text) -> (opt Intent);
+  refund_intent : (text) -> (opt Intent);
+  create_invoice : (nat64, text, opt text, opt text) -> (Invoice);
+  list_invoices : () -> (vec Invoice) query;
+  set_provider_config : (ProviderConfig) -> ();
+  get_provider_configs : () -> (vec ProviderConfig) query;
+  health : () -> (bool, nat64) query;
+}

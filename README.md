@@ -1,302 +1,320 @@
-# 🧪🔥 Ultimate IC Vibe Coding Template
+# CaffePay - Payments & Invoicing on ICP
 
-This template was built for the **IC Vibe Coding Bootcamp (Rust Edition)** and it's meant to be used in Advance Challenge or in a future Hackathon.
+> Self-hosted, rails-agnostic payment processing template built on Internet Computer Protocol
 
-## Welcome! 👋
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DFX](https://img.shields.io/badge/DFX-0.15.0+-blue.svg)](https://smartcontracts.org/)
+[![Rust](https://img.shields.io/badge/Rust-1.70+-red.svg)](https://rustup.rs/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0+-black.svg)](https://nextjs.org/)
 
-This repository offers a high-quality, production-ready template to jumpstart your Internet Computer (ICP) development.
+CaffePay is a complete payments and invoicing template that runs on the Internet Computer. It provides a self-hosted alternative to traditional payment processors with support for multiple providers including Stripe, PayPal, and ckBTC.
 
-It includes:
+## ✨ Features
 
-- 🦀 **Rust-based Canister** backend
-- ⚛️ **React + Tailwind + Typescript** frontend
-- 🤖 **IC LLM Canister** integration for Agentic workflows
-- 🧪 **Full Test Suite**: Vitest + PocketIC for backend and frontend
-- 🔁 **CI/CD** with GitHub Actions for automated tests and code quality
-- 🤖 **Copilot Integration** to auto-generate tests, code, and changelogs
+- 🏗️ **Self-Hosted**: Deploy your own payment infrastructure on ICP
+- 🔌 **Multi-Provider**: Support for Stripe, PayPal, ckBTC out of the box
+- 🔧 **Rails-Agnostic**: Works with any backend framework
+- 🎨 **Modern UI**: Dark premium interface with glass morphism design
+- 📊 **Admin Dashboard**: Manage configurations, invoices, and view reports
+- 🔐 **No Custody**: Direct payments to your provider accounts
+- 🚀 **Production Ready**: Stable storage, upgrade-safe canister design
 
-Whether you're building full-stack dapps or agents, this template gives you a solid foundation to start fast and scale smoothly. 🚀
+## 🚀 Quick Start (90 seconds)
 
-![Template Screenshot](.github/assets/template-screenshot.png)
+### Prerequisites
 
----
+- [DFX SDK](https://smartcontracts.org/docs/quickstart/local-quickstart.html) (0.15.0+)
+- [Rust](https://rustup.rs/) with `wasm32-unknown-unknown` target
+- [Node.js](https://nodejs.org/) (18+) and [pnpm](https://pnpm.io/)
 
-## 📜 Table of Contents
-
-- [🎥 Recording](#-recording)
-- [🚀 Getting Started](#-getting-started)
-- [📁 Project Structure](#-project-structure)
-- [✅ Testing Patterns](#-testing-patterns)
-- [🔄 CI/CD Workflow](#-cicd-workflow)
-- [🧠 GitHub Copilot Integration](#-github-copilot-integration)
-- [🔗 Resources & Documentation](#-learning-resources)
-- [📩 Submit Your Project!](#-submit-your-project)
-
----
-
-## 🎥 Recording
-
-There was an Advanced Challenge Lab session, that was recorded and had a lot of information and showcase of Vibe Coding using this template.
-
-You can see here the full recording: https://www.youtube.com/watch?v=ZuNUy13wmlI
-
----
-
-## 🚀 Getting Started
-
-### 🧑‍💻 1. Get Codespace Ready
-
-A **devcontainer** is preconfigured for you to start coding instantly!
-
-- Click on "Use this Template" → "Create a new repository".
-- Click "Code → Open with Codespaces"
-- Change machine type to 4-core 16GB RAM • 32GB
-- Once the codespace is created, you can open it in VS Code Local
-- Everything is pre-installed and ready for you to run the following commands
-
-### 2. Install Dependencies
+### Installation
 
 ```bash
-npm install
+# Clone the repository
+git clone https://github.com/your-org/caffpay.git
+cd caffpay
+
+# Install frontend dependencies
+cd frontend && pnpm install && cd ..
+
+# Add Rust target
+rustup target add wasm32-unknown-unknown
 ```
 
-### 3. Running Ollama
-
-To be able to test the agent locally, you'll need a server for processing the agent's prompts. For that, we'll use `ollama`, which is a tool that can download and serve LLMs.
-See the documentation on the [Ollama website](https://ollama.com/). Run:
+### Local Development
 
 ```bash
-ollama serve
-# Expected to start listening on port 11434
+# Start local IC replica
+pnpm ic:start
+
+# Build and deploy locally
+pnpm ic:deploy:local
+
+# Open frontend
+# The deploy command will output the frontend canister URL
 ```
 
-The above command will start the Ollama server, so that it can process requests by the agent. Additionally, and in a separate window, run the following command to download the LLM that will be used by the agent:
+### Deploy to IC Mainnet
 
 ```bash
-ollama run llama3.1:8b
+# Deploy to mainnet (requires cycles)
+pnpm ic:deploy:ic
 ```
 
-Once the command executes and the model is loaded, you can terminate it by typing /bye. You won't need to do this step again.
+## 🏗️ Architecture
 
-### 4. Deployment
+```
+caffpay/
+├─ dfx.json                     # IC configuration
+├─ package.json                 # Root scripts
+├─ src/backend/                 # Rust canister
+│  ├─ Cargo.toml
+│  └─ src/lib.rs               # Payment logic & storage
+└─ frontend/                    # Next.js app
+   ├─ app/                     # App router pages
+   │  ├─ layout.tsx            # Root layout
+   │  ├─ page.tsx              # Home page
+   │  ├─ demo/page.tsx         # Payment demo
+   │  ├─ receipt/[id]/page.tsx # Receipt view
+   │  ├─ admin/page.tsx        # Admin dashboard
+   │  ├─ docs/page.tsx         # Documentation
+   │  └─ status/page.tsx       # System status
+   ├─ lib/adapters/            # Payment adapters
+   │  ├─ Adapter.ts            # Base interface
+   │  ├─ stripe.ts             # Stripe mock
+   │  ├─ paypal.ts             # PayPal mock
+   │  └─ ckbtc.ts              # ckBTC mock
+   └─ lib/ic/actors.ts         # IC integration
+```
 
-Then, in one terminal window, run:
+## 🔐 Security & Custody
+
+> ⚠️ **IMPORTANT SECURITY NOTICE**
+
+### No Custody Model
+CaffePay **does not hold or custody any funds**. All payments flow directly to your configured provider accounts (Stripe, PayPal, etc.). The canister only tracks payment intents and metadata.
+
+### Demo vs Production
+This template includes **demonstration-only** features:
+
+- ✅ **Demo Mode**: Provider configurations stored in plain text
+- ❌ **Production**: Requires proper encryption and key management
+
+### Production Checklist
+Before using in production:
+
+- [ ] Implement proper key encryption for provider credentials
+- [ ] Add authentication and role-based access controls
+- [ ] Set up audit logging for all payment operations
+- [ ] Configure proper backup and disaster recovery
+- [ ] Security audit of the entire codebase
+- [ ] Implement rate limiting and DDoS protection
+
+### Recommended Security Measures
+1. **Key Management**: Use IC's cryptography features for encrypting sensitive data
+2. **Access Control**: Implement caller-based permissions
+3. **Audit Trail**: Log all critical operations with timestamps
+4. **Input Validation**: Validate all user inputs and amounts
+5. **Error Handling**: Never expose sensitive information in error messages
+
+## 🔌 Adding a New Payment Adapter
+
+### 1. Create Adapter File
+
+Create `frontend/lib/adapters/yourprovider.ts`:
+
+```typescript
+import { Adapter, IntentDTO } from './Adapter';
+
+export const yourProviderAdapter: Adapter = {
+  id: 'yourprovider',
+  label: 'Your Provider',
+  
+  async pay(intent: IntentDTO): Promise<{ ok: boolean; receiptHash?: string }> {
+    // Implement your payment logic
+    try {
+      const result = await yourProviderAPI.createPayment({
+        amount: intent.amountMinor,
+        currency: intent.currency,
+        description: intent.description,
+      });
+      
+      return { 
+        ok: result.success, 
+        receiptHash: result.transactionId 
+      };
+    } catch (error) {
+      console.error('Payment failed:', error);
+      return { ok: false };
+    }
+  }
+};
+```
+
+### 2. Register in Demo Page
+
+Add to `frontend/app/demo/page.tsx`:
+
+```typescript
+import { yourProviderAdapter } from '@/lib/adapters/yourprovider';
+
+const adapters = {
+  stripe: stripeAdapter,
+  paypal: paypalAdapter,
+  ckbtc: ckbtcAdapter,
+  yourprovider: yourProviderAdapter, // Add here
+};
+```
+
+### 3. Update Backend (Optional)
+
+If you need a new provider type, update `src/backend/src/lib.rs`:
+
+```rust
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+pub enum Provider {
+    Stripe,
+    PayPal,
+    CkBTC,
+    YourProvider, // Add new provider
+    Custom(String)
+}
+```
+
+## 📋 API Reference
+
+### Backend Canister Methods
+
+#### Intent Management
+- `create_intent(amount_minor, currency, description, provider)` - Create payment intent
+- `get_intent(id)` - Get intent by ID  
+- `list_intents()` - List all intents
+- `mark_paid(id, receipt_hash)` - Mark intent as paid
+- `refund_intent(id)` - Mark intent as refunded
+
+#### Invoice Management
+- `create_invoice(amount_minor, currency, email_enc, description)` - Create invoice
+- `list_invoices()` - List all invoices
+
+#### Configuration
+- `set_provider_config(config)` - Set provider configuration
+- `get_provider_configs()` - Get all provider configs
+- `health()` - Check canister health
+
+### Frontend Integration
+
+```typescript
+import { getBackend } from '@/lib/ic/actors';
+
+// Create a payment intent
+const backend = await getBackend();
+const intent = await backend.create_intent(
+  1000, // $10.00 in cents
+  'USD',
+  ['Coffee purchase'],
+  { Stripe: null }
+);
+
+// Process with adapter
+const adapter = stripeAdapter;
+const result = await adapter.pay({
+  id: intent.id,
+  amountMinor: 1000,
+  currency: 'USD',
+  description: 'Coffee purchase'
+});
+
+// Mark as paid
+if (result.ok) {
+  await backend.mark_paid(intent.id, result.receiptHash ? [result.receiptHash] : []);
+}
+```
+
+## 🛠️ Development
+
+### Available Scripts
 
 ```bash
-dfx start --clean
+# Development
+pnpm ic:start          # Start local IC replica
+pnpm ic:stop           # Stop local IC replica
+pnpm dev:frontend      # Start frontend dev server
+
+# Building
+pnpm build:backend     # Build Rust canister
+pnpm build:frontend    # Build Next.js app
+pnpm build             # Build everything
+
+# Deployment
+pnpm ic:deploy:local   # Deploy to local replica
+pnpm ic:deploy:ic      # Deploy to IC mainnet
+
+# Utilities
+pnpm generate          # Generate TypeScript declarations
+pnpm clean             # Clean all build artifacts
+pnpm test:backend      # Run Rust tests
 ```
 
-Keep this tab open for reading logs.
+### Local Development URLs
 
-Then pull the dependency and deploy the canisters in another window:
+After deploying locally:
+- Frontend: `http://localhost:4943/?canisterId=<frontend_canister_id>`
+- Backend: Candid UI at `http://localhost:4943/_/candid?id=<backend_canister_id>`
 
-```bash
-dfx deploy # deploys the backend and frontend canisters
-```
+## 🚦 Deployment Environments
 
-```bash
-dfx deps pull
-dfx deps deploy  # deploys the llm canister
-```
+### Local Development
+- Network: Local replica
+- Features: Full functionality with mock adapters
+- Use case: Development and testing
 
-### 5. Start the Development Server
+### IC Testnet (Future)
+- Network: IC testnet
+- Features: Real IC environment, test cycles
+- Use case: Pre-production testing
 
-You can start the frontend development server with:
+### IC Mainnet
+- Network: IC mainnet  
+- Features: Production environment
+- Use case: Live applications (requires cycles)
 
-```bash
-# Just the frontend development server
-npm start
+## 🤝 Contributing
 
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Commit changes: `git commit -am 'Add my feature'`
+4. Push to branch: `git push origin feature/my-feature`
+5. Submit a Pull Request
 
-### 6. Run Tests
+### Development Guidelines
 
-```bash
-npm test
-```
+- Follow Rust and TypeScript best practices
+- Add tests for new functionality
+- Update documentation for API changes
+- Ensure security review for payment-related code
 
-You can also run:
+## 📄 License
 
-```bash
-npm test tests/src/backend.test.ts    # individual test
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## ⚠️ Disclaimer
+
+This software is provided "as is" without warranty. It is intended for educational and development purposes. Before using in production:
+
+- Conduct thorough security audits
+- Implement proper access controls
+- Test extensively with small amounts
+- Comply with relevant financial regulations
+
+The authors are not responsible for any financial losses or security breaches resulting from the use of this software.
+
+## 🆘 Support
+
+- 📚 [Documentation](http://localhost:4943/?canisterId=<frontend_canister_id>/docs/)
+- 🐛 [Report Issues](https://github.com/your-org/caffpay/issues)
+- 💬 [Discussions](https://github.com/your-org/caffpay/discussions)
+- 🌐 [Internet Computer Docs](https://smartcontracts.org/)
 
 ---
 
-## 📁 Project Structure
-
-```
-ICP-Bootcamp-Vibe-Coding/
-├── .devcontainer/devcontainer.json       # Container config for running your own codespace
-├── .github/instructions/                 # Copilot general and language specific instructions
-├── .github/prompts/                      # Copilot Prompts, like add feature and changes review
-├── .github/workflows/                    # GitHub CI/CD pipelines
-├── src/
-│   ├── backend/                          # Rust backend canister
-│   │   ├── src/
-│   │   │   └── lib.rs                    # Main Rust file
-│   │   └── Cargo.toml                    # Rust dependencies
-│   ├── frontend/                         # React + Tailwind + TypeScript frontend
-│   │   ├── src/
-│   │   │   ├── App.tsx                   # Main App component
-│   │   │   ├── index.css                 # Global styles with Tailwind
-│   │   │   ├── components/               # Reusable UI components
-│   │   │   ├── services/                 # Canister service layers
-│   │   │   └── views/                    # Page-level components
-│   │   ├── assets/                       # Static assets (images, icons)
-│   │   ├── tests/                        # Frontend unit tests
-│   │   ├── index.html                    # Frontend entry point
-│   │   ├── main.tsx                      # React main file
-│   │   ├── package.json                  # Frontend dependencies
-│   │   ├── tsconfig.json                 # TypeScript configuration
-│   │   ├── vite.config.ts                # Vite build configuration
-│   │   └── vite-env.d.ts                 # Vite type definitions
-│   └── declarations/                     # Auto-generated canister interfaces
-├── tests/
-│   ├── src/                              # Backend test files
-│   ├── backend-test-setup.ts             # PocketIC instance
-│   └── vitest.config.ts                  # Vitest configuration
-├── scripts/
-│   ├── dev-container-setup.sh            # Extra set up steps for codespace
-│   └── generate-candid.sh                # Useful one way script to build, generate candid and did files
-├── dfx.json                              # ICP config
-├── Cargo.toml                            # Root Rust workspace config
-└── CHANGELOG.md
-```
-
----
-
-## 🔄 CI/CD Workflow
-
-Located under `.github/workflows/`, this includes:
-
-- 🧪 Automated end-2-end test runs
-
-It could be extended to:
-
-- check for security updates (audit);
-- test coverage;
-- code quality.
-
----
-
-## 🧠 **GitHub Copilot Integration**
-
-This project leverages two key customization folders:
-
-- `.github/instructions/` – Provides essential context to guide AI responses.
-- `.github/prompts/` – Defines workflow prompts to effectively assist you.
-
-Think of the AI as a super-fast junior developer, handling the heavy lifting while you focus on quality control. Instead of using PRs, you’re reviewing and refining code directly in the IDE through Copilot chat.
-
-### 📝 **About Instructions**
-
-Instructions provide "context" that applies to specific files using regex patterns defined in `applyTo`. They are ideal for project-wide or language-specific guidance.
-
-**Current Instructions:**
-
-- **general:** `applyTo: **`
-- **rust:** `applyTo: */*.rs`
-- **test:** `applyTo: tests/**`
-
-**Examples of Context You Can Define:**
-
-- This is an ICP project using Rust canisters.
-- For Rust, we follow Clippy and Rust FMT style guides and linting tools.
-- For tests, we use **Pocket IC** and maintain a specific test structure.
-
-### 🛠️ **About Prompts**
-
-Prompts define specific tasks and guide the AI through a structured workflow. They are especially useful for maintaining a consistent development process.
-
----
-
-#### ✨ **Add Feature Prompt**
-
-```markdown
-/add-feature Add a function to decrease the counter value
-```
-
-In this workflow, Copilot follows a Spec Driven Workflow:
-
-1. Clarification Phase:
-   • Updates the changelog and asks for any necessary clarifications.
-2. Test First Approach:
-   • Generates a test case and ensures it fails, confirming that the test is effectively targeting the desired behavior.
-3. Human Confirmation:
-   • The AI pauses for a human to review and confirm the spec, ensuring alignment before proceeding.
-4. Implementation Phase:
-   • Implements the code, self-checks for errors, installs necessary libraries, lints, formats, and runs tests to confirm they pass.
-
-**✅ Key Takeaways**
-
-When you explore the prompt, please notice:
-
-- CRITICAL PAUSE POINTS
-  - Strategic pauses allow the human to verify the work in small, reviewable chunks and redirect if necessary.
-- Command Explanations
-  - The prompt can include specific commands or scripts, guiding the AI in self-checking, running scripts, or managing dependencies.
-- Task-Specific Advice
-  - The prompt is the place to add any specific guidance or notes relevant only to the particular task at hand.
-
-#### 🚧 **Changes Review Prompt**
-
-To run a review, simply call the prompt:
-
-```markdown
-/changes-review
-```
-
-The AI will analyze the current git diffs, then reference other files in the repo for context. It will generate a comprehensive report for you to review before committing.
-
-#### ✅ **Focus Areas**
-
-1. **Business Logic:**
-
-   - Detects potential unwanted side effects or missing edge cases.
-
-2. **Code Quality:**
-
-   - Suggests improvements or refactor opportunities.
-
-3. **Security & Performance:**
-   - Identifies vulnerabilities or inefficiencies.
-
-#### 📌 **Why It Matters**
-
-- AI can handle the heavy lifting, but it's **your responsibility as the Senior** to validate the findings.
-- Double-check and ensure quality – small issues now can become big problems later. 😉
-
----
-
-## 📚 Learning Resources
-
-- [Instruction and Prompt Files](https://code.visualstudio.com/docs/copilot/copilot-customization)
-- [Agent Mode](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode)
-- [Copilot Reference](https://code.visualstudio.com/docs/copilot/reference/copilot-vscode-features)
-- [ICP Dev Docs](https://internetcomputer.org/docs)
-- [Rust CDK](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [PicJS Doc](https://dfinity.github.io/pic-js/)
-- [Vitest Testing Framework](https://vitest.dev/)
-
----
-
-### 🤝 **Contributing**
-
-We welcome contributions! If you encounter a bug, have a feature request, or want to suggest improvements, please open an issue or submit a Pull Request.
-
-We especially welcome candidates of limits you face, consider using the **Limit Candidate Form Issue** – it helps us prioritize and address the most impactful limits effectively.
-
----
-
-## 📩 Submit Your Project!
-
-🎯 **Completed your challenge? Submit your project here:**  
-📢 [Taikai Submission](https://taikai.network/icp-eu-alliance/hackathons/VIBATHON)
-
-📌 **Want to explore more challenges? Return to the index:**  
-🔗 [IC Vibathon Index](https://github.com/pt-icp-hub/IC-Vibathon-Index)
-
----
-
-**Now go build something fast, tested, and production-ready 🚀🦀**
+Built with ❤️ on the [Internet Computer](https://internetcomputer.org/)
