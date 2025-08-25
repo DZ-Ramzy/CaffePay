@@ -29,7 +29,7 @@ export default function ReceiptPage() {
         const backend = await getBackend()
         const result = await backend.get_intent(id)
         
-        if (result.length > 0) {
+        if (result.length > 0 && result[0]) {
           setIntent(result[0])
         } else {
           setError('Payment not found')
